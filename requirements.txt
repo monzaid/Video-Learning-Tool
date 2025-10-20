@@ -1,0 +1,8 @@
+# SRT字幕转TXT工具依赖包
+
+# 可选依赖：
+# tkinterdnd2 - 用于文件拖拽功能（可选，不安装也能正常使用）
+tkinterdnd2>=0.3.0
+
+# 如果需要打包成exe文件，可以安装：
+pyinstaller>=5.0
