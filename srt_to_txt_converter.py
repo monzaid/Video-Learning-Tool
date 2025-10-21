@@ -45,6 +45,17 @@ class SRTToTXTConverter:
         # 文件拖拽导入相关变量
         self.is_drag_over = False  # 是否有文件拖拽到区域上方
         
+        # 功能选择相关变量
+        self.function_mode = tk.StringVar(value="srt转txt")
+        self.function_descriptions = {
+            "srt转txt": "将SRT字幕文件转换为纯文本TXT文件，去除时间戳和序号，只保留字幕内容",
+            "mp4转srt": "从MP4视频文件中提取音频并生成SRT字幕文件（需要语音识别功能）",
+            "mp4语音翻译": "提取MP4视频中的语音内容并翻译为指定语言的文本",
+            "srt文本翻译": "将SRT字幕文件中的文本内容翻译为其他语言",
+            "txt文本翻译": "将TXT文本文件内容翻译为其他语言",
+            "txt文本总结笔记": "对TXT文本文件内容进行智能总结，生成要点笔记"
+        }
+        
         # 创建GUI界面
         self.create_widgets()
     
@@ -70,11 +81,38 @@ class SRTToTXTConverter:
         ttk.Button(file_frame, text="删除选中文件",
                   command=self.remove_selected_files).grid(row=0, column=3)
         
+        # 创建右对齐的功能选择框架
+        function_frame = ttk.Frame(file_frame)
+        function_frame.grid(row=0, column=4, sticky=tk.E, padx=(20, 0))
+        
+        # 功能选择下拉框
+        ttk.Label(function_frame, text="功能：").pack(side=tk.LEFT, padx=(0, 5))
+        
+        self.function_combobox = ttk.Combobox(
+            function_frame,
+            textvariable=self.function_mode,
+            values=list(self.function_descriptions.keys()),
+            state="readonly",
+            width=12
+        )
+        self.function_combobox.pack(side=tk.LEFT, padx=(0, 5))
+        self.function_combobox.bind('<<ComboboxSelected>>', self.on_function_changed)
+        
+        # 帮助按钮
+        self.help_button = ttk.Button(function_frame, text="?", width=3)
+        self.help_button.pack(side=tk.LEFT)
+        
+        # 为帮助按钮创建悬浮提示
+        self.create_function_help_tooltip(self.help_button)
+        
+        # 配置file_frame的列权重，让第4列可以扩展
+        file_frame.columnconfigure(4, weight=1)
+        
         # 第二行：递归选项
         self.recursive_var = tk.BooleanVar(value=False)
         ttk.Checkbutton(file_frame, text="递归搜索子文件夹中的SRT文件",
                        variable=self.recursive_var,
-                       command=self.on_recursive_changed).grid(row=1, column=0, columnspan=4,
+                       command=self.on_recursive_changed).grid(row=1, column=0, columnspan=5,
                                                               sticky=tk.W, pady=(10, 0))
        
        
@@ -2059,6 +2097,61 @@ class SRTToTXTConverter:
             context_menu.tk_popup(event.x_root, event.y_root)
         finally:
             context_menu.grab_release()
+    
+    def on_function_changed(self, event=None):
+        """功能选择下拉框变化时的回调"""
+        selected_function = self.function_mode.get()
+        print(f"选择的功能: {selected_function}")
+        
+        # 根据选择的功能更新界面状态
+        if selected_function == "srt转txt":
+            # 当前功能，保持现有状态
+            pass
+        else:
+            # 其他功能暂未实现，显示提示
+            messagebox.showinfo("功能提示", f"'{selected_function}' 功能正在开发中，敬请期待！")
+            # 重置为默认功能
+            self.function_mode.set("srt转txt")
+    
+    def create_function_help_tooltip(self, widget):
+        """为帮助按钮创建动态悬浮提示"""
+        def on_enter(event):
+            # 获取当前选择的功能
+            current_function = self.function_mode.get()
+            description = self.function_descriptions.get(current_function, "暂无描述")
+            
+            # 创建提示窗口
+            tooltip = tk.Toplevel()
+            tooltip.wm_overrideredirect(True)
+            tooltip.wm_geometry(f"+{event.x_root+10}+{event.y_root-30}")
+            
+            # 创建提示标签
+            label = tk.Label(
+                tooltip,
+                text=f"{current_function}:\n{description}",
+                background="lightyellow",
+                relief="solid",
+                borderwidth=1,
+                wraplength=300,
+                justify=tk.LEFT,
+                font=("", 9),
+                padx=8,
+                pady=6
+            )
+            label.pack()
+            
+            # 存储提示窗口引用
+            widget.tooltip = tooltip
+        
+        def on_leave(event):
+            # 销毁提示窗口
+            if hasattr(widget, 'tooltip'):
+                widget.tooltip.destroy()
+                del widget.tooltip
+        
+        # 绑定鼠标事件
+        widget.bind("<Enter>", on_enter)
+        widget.bind("<Leave>", on_leave)
 
 
 def main():
