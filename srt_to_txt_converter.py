@@ -18,7 +18,7 @@ class SRTToTXTConverter:
     def __init__(self, root):
         self.root = root
         self.root.title("SRT字幕转TXT工具")
-        self.root.geometry("800x700")  # 增加高度以容纳搜索框和新选项
+        self.root.geometry("650x710")  # 增加高度以容纳搜索框和新选项
         
         # 存储文件信息：{文件路径: {'var': BooleanVar, 'frame': Frame}}
         self.file_items = {}
@@ -64,9 +64,13 @@ class SRTToTXTConverter:
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
+        # 功能选择框架
+        function_frame = ttk.LabelFrame(main_frame, text="功能选择", padding="10")
+        function_frame.grid(row=0, column=0, columnspan=1, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
         # 文件选择区域
         file_frame = ttk.LabelFrame(main_frame, text="文件选择", padding="10")
-        file_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
+        file_frame.grid(row=1, column=0, columnspan=1, sticky=(tk.W, tk.E), pady=(0, 10))
         
         # 第一行：文件选择按钮
         ttk.Button(file_frame, text="选择SRT文件",
@@ -75,18 +79,14 @@ class SRTToTXTConverter:
         ttk.Button(file_frame, text="选择文件夹",
                   command=self.select_folder).grid(row=0, column=1, padx=(0, 10))
         
-        ttk.Button(file_frame, text="清空所有文件",
-                  command=self.clear_all_files).grid(row=0, column=2, padx=(0, 10))
-        
-        ttk.Button(file_frame, text="删除选中文件",
-                  command=self.remove_selected_files).grid(row=0, column=3)
-        
-        # 创建右对齐的功能选择框架
-        function_frame = ttk.Frame(file_frame)
-        function_frame.grid(row=0, column=4, sticky=tk.E, padx=(20, 0))
+        # 递归选项
+        self.recursive_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(file_frame, text="递归搜索子文件夹中的SRT文件",
+                       variable=self.recursive_var).grid(row=0, column=2, columnspan=5,
+                                                              sticky=tk.W, pady=(0, 0))
         
         # 功能选择下拉框
-        ttk.Label(function_frame, text="功能：").pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Label(function_frame, text="当前功能：").pack(side=tk.LEFT, padx=(0, 5))
         
         self.function_combobox = ttk.Combobox(
             function_frame,
@@ -104,21 +104,10 @@ class SRTToTXTConverter:
         
         # 为帮助按钮创建悬浮提示
         self.create_function_help_tooltip(self.help_button)
-        
-        # 配置file_frame的列权重，让第4列可以扩展
-        file_frame.columnconfigure(4, weight=1)
-        
-        # 第二行：递归选项
-        self.recursive_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(file_frame, text="递归搜索子文件夹中的SRT文件",
-                       variable=self.recursive_var,
-                       command=self.on_recursive_changed).grid(row=1, column=0, columnspan=5,
-                                                              sticky=tk.W, pady=(10, 0))
-       
        
         # 搜索区域（在文件列表上方）
         search_frame = ttk.Frame(main_frame)
-        search_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 5))
+        search_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 5))
         
         ttk.Label(search_frame, text="搜索文件：").pack(side=tk.LEFT)
         
@@ -149,7 +138,7 @@ class SRTToTXTConverter:
         else:
             list_title = "文件列表（勾选要处理的文件，支持Ctrl+V粘贴文件路径）"
         list_frame = ttk.LabelFrame(main_frame, text=list_title, padding="10")
-        list_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        list_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
         
         # 创建滚动区域
         canvas = tk.Canvas(list_frame, height=200)
@@ -221,7 +210,13 @@ class SRTToTXTConverter:
                   command=self.deselect_all_files).pack(side=tk.LEFT, padx=(0, 10))
         
         ttk.Button(select_frame, text="反向选择",
-                  command=self.invert_selection).pack(side=tk.LEFT, padx=(0, 20))
+                  command=self.invert_selection).pack(side=tk.LEFT, padx=(0, 10))
+        
+        ttk.Button(select_frame, text="清空所有文件",
+                  command=self.clear_all_files).pack(side=tk.LEFT, padx=(0, 10))
+        
+        ttk.Button(select_frame, text="删除选中文件",
+                  command=self.remove_selected_files).pack(side=tk.LEFT, padx=(0, 10))
         
         # 显示文件夹路径选项
         self.show_folder_path_var = tk.BooleanVar(value=False)
@@ -263,7 +258,7 @@ class SRTToTXTConverter:
         
         # 输出选项
         option_frame = ttk.LabelFrame(main_frame, text="输出选项", padding="10")
-        option_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
+        option_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
         
         # 输出模式选择
         self.output_mode = tk.StringVar(value="separate")
@@ -325,7 +320,7 @@ class SRTToTXTConverter:
         
         # 转换按钮
         convert_frame = ttk.Frame(main_frame)
-        convert_frame.grid(row=4, column=0, columnspan=2, pady=(10, 0))
+        convert_frame.grid(row=5, column=0, columnspan=2, pady=(10, 0))
         
         ttk.Button(convert_frame, text="转换选中文件",
                   command=self.convert_selected_files, style="Accent.TButton").pack()
@@ -343,9 +338,12 @@ class SRTToTXTConverter:
         if self.output_mode.get() == "merge":
             # 显示合成输出文件名显示选项（在合成输出右边）
             self.show_merge_path_checkbox.pack(side=tk.LEFT, padx=(20, 0))
+            self.merge_by_folder_checkbox.pack(side=tk.LEFT, padx=(20, 0))
         else:
             # 隐藏合成输出文件名显示选项
             self.show_merge_path_checkbox.pack_forget()
+            self.merge_by_folder_checkbox.pack_forget()
+            self.merge_by_folder_var.set(False)
     
     def on_output_folder_changed(self):
         """输出文件夹选项变化时的回调"""
@@ -383,16 +381,6 @@ class SRTToTXTConverter:
                 # 对于单独选择的文件，文件夹路径就是文件所在目录
                 folder_path = os.path.dirname(file)
                 self.add_file_item(file, folder_path)
-    
-    def on_recursive_changed(self):
-        """递归选项变化时的回调"""
-        if self.recursive_var.get():
-            # 显示按文件夹合并选项（在显示路径选项右边）
-            self.merge_by_folder_checkbox.pack(side=tk.LEFT, padx=(20, 0))
-        else:
-            # 隐藏按文件夹合并选项
-            self.merge_by_folder_checkbox.pack_forget()
-            self.merge_by_folder_var.set(False)
     
     def select_folder(self):
         """选择文件夹并获取其中所有SRT文件"""
